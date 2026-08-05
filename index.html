@@ -1,0 +1,1347 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Comprendre les microcontrôleurs — Cours complet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;800&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b1f22;
+  --panel:#123034;
+  --panel2:#0e2629;
+  --line:#1e4046;
+  --amber:#ffb84d;
+  --amber-deep:#f59e1f;
+  --txt:#e9efee;
+  --muted:#93aeab;
+  --green:#4cd98a;
+  --red:#ff6b6b;
+  --code-bg:#071518;
+  --radius:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);
+  color:var(--txt);
+  font-family:'Sora',-apple-system,'Segoe UI',sans-serif;
+  font-size:16px;line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+}
+code,pre,.mono{font-family:'IBM Plex Mono','SF Mono',Menlo,monospace}
+
+/* ===== HEADER ===== */
+header{
+  background:linear-gradient(160deg,#0e2629 0%,#123a40 100%);
+  border-bottom:2px solid var(--amber);
+  padding:28px 18px 22px;
+  text-align:center;
+}
+header .chip{
+  display:inline-block;background:rgba(255,184,77,.12);
+  border:1px solid rgba(255,184,77,.4);color:var(--amber);
+  font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;
+  padding:4px 12px;border-radius:99px;margin-bottom:12px;font-weight:600;
+}
+header h1{font-size:1.5rem;font-weight:800;line-height:1.25;margin-bottom:6px}
+header h1 span{color:var(--amber)}
+header p.sub{color:var(--muted);font-size:.85rem}
+header p.author{margin-top:10px;font-size:.78rem;color:var(--muted)}
+header p.author b{color:var(--txt)}
+
+/* ===== NAV MODULES ===== */
+nav.mods{
+  display:flex;gap:8px;overflow-x:auto;
+  padding:12px 14px;background:var(--panel2);
+  border-bottom:1px solid var(--line);
+  position:sticky;top:0;z-index:50;
+  -webkit-overflow-scrolling:touch;
+}
+nav.mods::-webkit-scrollbar{display:none}
+nav.mods button{
+  flex:0 0 auto;background:transparent;border:1px solid var(--line);
+  color:var(--muted);border-radius:99px;padding:7px 14px;
+  font-family:inherit;font-size:.8rem;font-weight:600;cursor:pointer;
+  transition:all .2s;white-space:nowrap;
+}
+nav.mods button.active{
+  background:var(--amber);border-color:var(--amber);color:#12262a;
+}
+nav.mods button.done::after{content:" ✓";color:inherit}
+nav.mods button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+
+/* ===== LAYOUT ===== */
+main{max-width:820px;margin:0 auto;padding:22px 16px 80px}
+section.module{display:none;animation:fadeIn .35s ease}
+section.module.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){
+  section.module.active{animation:none}
+  html{scroll-behavior:auto}
+}
+
+.mod-head{margin-bottom:18px}
+.mod-head .num{
+  font-family:'IBM Plex Mono',monospace;color:var(--amber);
+  font-size:.8rem;letter-spacing:.15em;
+}
+.mod-head h2{font-size:1.35rem;font-weight:800;margin-top:2px}
+.objectifs{
+  background:rgba(76,217,138,.07);border:1px solid rgba(76,217,138,.3);
+  border-radius:var(--radius);padding:14px 16px;margin:14px 0 20px;
+  font-size:.9rem;
+}
+.objectifs b{color:var(--green)}
+.objectifs ul{margin:6px 0 0 18px}
+
+h3{font-size:1.05rem;font-weight:700;margin:26px 0 10px;color:var(--amber)}
+p{margin-bottom:12px}
+p.lead{font-size:1.02rem}
+strong{color:#fff}
+em{color:var(--amber);font-style:normal;font-weight:600}
+
+/* Analogie terrain */
+.terrain{
+  background:var(--panel);border-left:4px solid var(--amber);
+  border-radius:0 var(--radius) var(--radius) 0;
+  padding:14px 16px;margin:16px 0;font-size:.92rem;
+}
+.terrain .tag{
+  font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--amber);font-weight:700;display:block;margin-bottom:6px;
+}
+
+/* Boîte clé */
+.cle{
+  background:var(--panel2);border:1px dashed var(--line);
+  border-radius:var(--radius);padding:14px 16px;margin:16px 0;font-size:.92rem;
+}
+.cle .tag{
+  font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--green);font-weight:700;display:block;margin-bottom:6px;
+}
+
+/* Code */
+pre{
+  background:var(--code-bg);border:1px solid var(--line);
+  border-radius:var(--radius);padding:14px 16px;overflow-x:auto;
+  font-size:.82rem;line-height:1.6;margin:14px 0;
+}
+pre .c{color:#5e8a85}   /* commentaire */
+pre .k{color:var(--amber)} /* mot-clé */
+pre .n{color:#7fd4ff}   /* nombre / registre */
+pre .s{color:var(--green)} /* chaîne */
+code.inline{
+  background:var(--code-bg);border:1px solid var(--line);
+  padding:1px 7px;border-radius:6px;font-size:.85em;color:var(--amber);
+}
+
+/* Tableaux */
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:.85rem}
+th,td{border:1px solid var(--line);padding:8px 10px;text-align:left}
+th{background:var(--panel2);color:var(--amber);font-weight:700}
+td{background:rgba(255,255,255,.015)}
+.tscroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+/* SVG figures */
+figure{margin:18px 0;text-align:center}
+figure svg{max-width:100%;height:auto}
+figcaption{font-size:.78rem;color:var(--muted);margin-top:8px}
+
+/* ===== INTERACTIF : registre binaire ===== */
+.bitreg{
+  background:var(--panel2);border:1px solid var(--line);
+  border-radius:var(--radius);padding:18px 14px;margin:18px 0;text-align:center;
+}
+.bitreg .bits{display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin:12px 0}
+.bitreg .bit{
+  width:44px;height:52px;border-radius:10px;border:2px solid var(--line);
+  background:var(--code-bg);color:var(--muted);font-family:'IBM Plex Mono',monospace;
+  font-size:1.3rem;font-weight:600;cursor:pointer;transition:all .15s;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+}
+.bitreg .bit small{font-size:.55rem;color:var(--muted);font-weight:400}
+.bitreg .bit.on{background:var(--amber);border-color:var(--amber);color:#12262a}
+.bitreg .bit.on small{color:#12262a}
+.bitreg .vals{display:flex;justify-content:center;gap:18px;flex-wrap:wrap;font-family:'IBM Plex Mono',monospace;font-size:.9rem;margin-top:10px}
+.bitreg .vals b{color:var(--amber);font-size:1.15rem}
+.bitreg .hint{font-size:.78rem;color:var(--muted);margin-top:8px}
+
+/* ===== INTERACTIF : PWM ===== */
+.pwmdemo{background:var(--panel2);border:1px solid var(--line);border-radius:var(--radius);padding:18px 16px;margin:18px 0}
+.pwmdemo input[type=range]{width:100%;accent-color:var(--amber);margin:10px 0}
+.pwmdemo .led{
+  width:60px;height:60px;border-radius:50%;margin:12px auto;
+  background:var(--amber);transition:opacity .1s;
+  box-shadow:0 0 30px rgba(255,184,77,.6);
+}
+.pwmdemo .stat{text-align:center;font-family:'IBM Plex Mono',monospace;font-size:.9rem;color:var(--muted)}
+.pwmdemo .stat b{color:var(--amber)}
+
+
+/* Encadré TP */
+.tp{
+  background:rgba(127,212,255,.06);border:1px solid rgba(127,212,255,.35);
+  border-radius:var(--radius);padding:14px 16px;margin:18px 0;font-size:.92rem;
+}
+.tp .tag{
+  font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;
+  color:#7fd4ff;font-weight:700;display:block;margin-bottom:6px;
+}
+.tp pre{margin:10px 0}
+
+/* ===== QUIZ ===== */
+.quiz{
+  background:var(--panel);border:1px solid var(--line);
+  border-radius:var(--radius);padding:18px 16px;margin:26px 0 10px;
+}
+.quiz h4{font-size:.95rem;margin-bottom:4px;color:var(--amber)}
+.quiz .q{margin:16px 0 8px;font-weight:600;font-size:.92rem}
+.quiz .opts{display:flex;flex-direction:column;gap:8px}
+.quiz .opts button{
+  text-align:left;background:var(--panel2);border:1px solid var(--line);
+  color:var(--txt);border-radius:10px;padding:10px 14px;
+  font-family:inherit;font-size:.88rem;cursor:pointer;transition:all .15s;
+}
+.quiz .opts button:hover{border-color:var(--amber)}
+.quiz .opts button.good{background:rgba(76,217,138,.15);border-color:var(--green);color:var(--green)}
+.quiz .opts button.bad{background:rgba(255,107,107,.12);border-color:var(--red);color:var(--red)}
+.quiz .exp{display:none;font-size:.82rem;color:var(--muted);margin-top:8px;padding-left:4px;border-left:2px solid var(--green)}
+.quiz .exp.show{display:block;padding-left:10px}
+
+/* ===== NAV BAS ===== */
+.pagenav{display:flex;justify-content:space-between;gap:12px;margin-top:30px}
+.pagenav button{
+  flex:1;background:var(--panel);border:1px solid var(--line);color:var(--txt);
+  border-radius:12px;padding:13px;font-family:inherit;font-weight:700;
+  font-size:.9rem;cursor:pointer;transition:all .2s;
+}
+.pagenav button.next{background:var(--amber);border-color:var(--amber);color:#12262a}
+.pagenav button:disabled{opacity:.35;cursor:default}
+
+footer{
+  text-align:center;padding:26px 16px 40px;color:var(--muted);
+  font-size:.75rem;border-top:1px solid var(--line);margin-top:20px;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="chip">Électronique embarquée · 14 modules · Théorie + Pratique</div>
+  <h1>Comprendre les <span>microcontrôleurs</span></h1>
+  <p class="sub">De zéro jusqu&rsquo;au bus CAN — cours pour débutants, avec TP Arduino à chaque étape</p>
+  <p class="author">Préparé par <b>Gora Fall</b> · Endeavour Mining</p>
+</header>
+
+<nav class="mods" id="navmods"></nav>
+
+<main id="content">
+<!-- ============ MODULE 1 ============ -->
+<section class="module" data-title="1. C'est quoi ?">
+<div class="mod-head">
+  <div class="num">MODULE 01 / 14</div>
+  <h2>C'est quoi un microcontrôleur ?</h2>
+</div>
+<div class="objectifs"><b>Objectifs :</b>
+  <ul>
+    <li>Définir un microcontrôleur avec tes propres mots</li>
+    <li>Comprendre pourquoi la carte Arduino est l'outil idéal pour apprendre</li>
+  </ul>
+</div>
+
+<p class="lead">Un <strong>microcontrôleur</strong> (µC), c'est un <em>ordinateur complet miniaturisé sur une seule puce</em> : un processeur, de la mémoire et des broches d'entrées/sorties, pour quelques euros.</p>
+
+<p>Contrairement à un PC, il ne sert pas à tout faire. Il est programmé pour <strong>une seule mission</strong>, qu'il répète des millions de fois par seconde, sans écran ni clavier : surveiller un capteur, piloter une électrovanne, compter des impulsions. Sans programme, c'est le composant le plus inutile du monde ; avec le bon programme, c'est le plus polyvalent.</p>
+
+<div class="terrain">
+  <span class="tag">⛏ Sur le terrain</span>
+  Une foreuse DP1500i contient des dizaines de microcontrôleurs : modules du bus CAN, afficheurs, capteurs intelligents. Quand tu diagnostiques un module qui « ne répond plus », tu diagnostiques un microcontrôleur et son programme.
+</div>
+
+<h3>Pourquoi apprendre avec Arduino ?</h3>
+<p><strong>Arduino</strong> est une petite carte électronique open source née en 2005, construite autour d'un microcontrôleur AVR (l'ATmega328 sur la carte UNO). Elle a été pensée pour que <em>n'importe qui</em> puisse débuter : la carte coûte une dizaine d'euros, le logiciel est gratuit, et la communauté mondiale partage des milliers d'exemples.</p>
+<p>Surtout, Arduino enlève tout ce qui décourage les débutants : pas de soudure pour commencer, pas de programmateur spécial, pas de configuration obscure. Tu branches la carte en USB, tu écris ton programme, tu cliques sur un bouton — et ta LED clignote. C'est la carte que nous utiliserons pour <em>tous</em> les TP de ce cours.</p>
+
+<div class="tscroll"><table>
+<tr><th></th><th>Microcontrôleur (Arduino)</th><th>Ordinateur (PC)</th></tr>
+<tr><td>Mission</td><td>Une tâche dédiée, en boucle</td><td>Usage général</td></tr>
+<tr><td>Mémoire</td><td>Intégrée sur la puce</td><td>Externe (RAM, disque)</td></tr>
+<tr><td>Consommation</td><td>Très faible (mW)</td><td>Élevée (dizaines de W)</td></tr>
+<tr><td>Prix</td><td>~10 €</td><td>Des centaines d'€</td></tr>
+</table></div>
+
+<div class="cle">
+  <span class="tag">✔ À retenir</span>
+  µC = processeur + mémoire + entrées/sorties sur une puce, dédié à une tâche. Arduino = la façon la plus simple de mettre les mains dessus. Il existe d'autres familles (PIC, STM32, MSP430…) : ce que tu apprends ici s'applique à toutes.
+</div>
+
+<div class="quiz">
+<h4>Quiz express</h4>
+<div class="q">1. Qu'est-ce qui distingue surtout un microcontrôleur d'un ordinateur ?</div>
+<div class="opts">
+  <button data-ok="0">Il est plus rapide</button>
+  <button data-ok="1">Tout est intégré sur une puce, dédiée à une seule mission</button>
+  <button data-ok="0">Il ne peut pas être programmé</button>
+</div>
+<div class="exp">Un système complet, autonome, économique — et concentré sur une seule tâche répétée en boucle.</div>
+<div class="q">2. Arduino, c'est…</div>
+<div class="opts">
+  <button data-ok="1">Une carte à microcontrôleur pensée pour apprendre et prototyper facilement</button>
+  <button data-ok="0">Un langage de programmation inventé en Italie</button>
+  <button data-ok="0">Une marque de capteurs</button>
+</div>
+<div class="exp">C'est une carte (et son écosystème logiciel) construite autour d'un µC AVR — la porte d'entrée idéale vers l'embarqué.</div>
+</div>
+</section>
+
+<!-- ============ MODULE 2 ============ -->
+<section class="module" data-title="2. Boîte à outils">
+<div class="mod-head">
+  <div class="num">MODULE 02 / 14</div>
+  <h2>Ta boîte à outils (et le minimum d'électricité)</h2>
+</div>
+<div class="objectifs"><b>Objectifs :</b>
+  <ul>
+    <li>Connaître le matériel de base d'un kit de démarrage</li>
+    <li>Retenir les 3 règles électriques qui évitent de griller les composants</li>
+  </ul>
+</div>
+
+<h3>Le kit de démarrage</h3>
+<div class="tscroll"><table>
+<tr><th>Élément</th><th>À quoi ça sert</th></tr>
+<tr><td><b>Carte Arduino UNO</b> + câble USB</td><td>Le cerveau, et son cordon de programmation/alimentation</td></tr>
+<tr><td><b>Plaque d'essai</b> (breadboard)</td><td>Monter des circuits sans souder : on enfiche, on teste, on modifie</td></tr>
+<tr><td><b>Fils de liaison</b> (jumpers)</td><td>Relier la carte à la plaque</td></tr>
+<tr><td><b>LEDs</b> + résistances 220 Ω</td><td>Tes premiers « actionneurs » (une LED se branche TOUJOURS avec sa résistance)</td></tr>
+<tr><td><b>Boutons poussoirs</b></td><td>Tes premières entrées</td></tr>
+<tr><td><b>Potentiomètre, LDR</b></td><td>Tes premières entrées analogiques</td></tr>
+<tr><td><b>Buzzer</b></td><td>Ton premier son</td></tr>
+<tr><td><b>Multimètre</b></td><td>L'outil que tu connais déjà : il reste ton meilleur ami ici aussi</td></tr>
+</table></div>
+
+<h3>La plaque d'essai en 20 secondes</h3>
+<p>Les trous d'une même <em>rangée de 5</em> sont reliés entre eux ; les deux <em>colonnes latérales</em> (+ et −) courent sur toute la longueur — on y amène le 5 V et le GND de l'Arduino. Un composant enfiché sur deux rangées différentes se retrouve « câblé » sans soudure.</p>
+
+<h3>Les 3 règles qui sauvent tes composants</h3>
+<p><strong>1. Une LED a toujours sa résistance.</strong> Sans elle, le courant n'est pas limité : la LED grille (et parfois la broche avec). 220 Ω est la valeur passe-partout en 5 V. C'est la loi d'Ohm au travail : U = R × I — la résistance limite le courant à une vingtaine de milliampères.</p>
+<p><strong>2. Les masses (GND) sont toujours communes.</strong> Deux circuits qui dialoguent doivent partager la même référence 0 V. Sinon les signaux n'ont aucun sens — exactement comme sur les machines.</p>
+<p><strong>3. Une broche fournit quelques milliampères, pas plus.</strong> LED : oui. Moteur, relais, bobine : jamais en direct — il faut un transistor ou un module relais entre les deux (l'« interface de puissance » qu'on verra au module 5).</p>
+
+<div class="terrain">
+  <span class="tag">⛏ Sur le terrain</span>
+  Ces trois règles, tu les appliques déjà en électromécanique : calibre des protections, équipotentielle des masses, relayage des commandes. L'Arduino, c'est la même logique en miniature — 5 V au lieu de 24 V, milliampères au lieu d'ampères.
+</div>
+
+<div class="quiz">
+<h4>Quiz express</h4>
+<div class="q">1. Pourquoi une résistance en série avec chaque LED ?</div>
+<div class="opts">
+  <button data-ok="1">Pour limiter le courant et protéger LED et broche</button>
+  <button data-ok="0">Pour rendre la lumière plus jolie</button>
+  <button data-ok="0">C'est optionnel si on fait vite</button>
+</div>
+<div class="exp">U = R × I : sans résistance, le courant s'emballe et détruit la LED. 220 Ω sous 5 V ≈ 20 mA, parfait.</div>
+<div class="q">2. Un capteur externe alimenté séparément envoie un signal incohérent à l'Arduino. Premier réflexe ?</div>
+<div class="opts">
+  <button data-ok="0">Changer le capteur</button>
+  <button data-ok="1">Vérifier que les masses (GND) sont bien communes</button>
+  <button data-ok="0">Augmenter la tension</button>
+</div>
+<div class="exp">Sans référence commune, un signal n'a pas de sens. C'est le premier point de contrôle, sur une plaque d'essai comme sur une foreuse.</div>
+</div>
+</section>
+
+<!-- ============ MODULE 3 ============ -->
+<section class="module" data-title="3. Premier programme">
+<div class="mod-head">
+  <div class="num">MODULE 03 / 14</div>
+  <h2>Ton premier programme : la LED qui clignote</h2>
+</div>
+<div class="objectifs"><b>Objectifs :</b>
+  <ul>
+    <li>Installer l'IDE Arduino et téléverser un programme</li>
+    <li>Comprendre la structure setup() / loop()</li>
+  </ul>
+</div>
+
+<p class="lead">Le rite d'initiation de tout l'embarqué : faire clignoter une LED. C'est le « bonjour le monde » du matériel — et c'est le moment où le débutant réalise qu'il vient de <em>donner un comportement</em> à un objet.</p>
+
+<h3>La chaîne de travail</h3>
+<p>1. Tu écris le programme (le <em>sketch</em>) dans l'<strong>IDE Arduino</strong> sur PC.<br>
+2. Tu branches la carte en <strong>USB</strong> et tu choisis carte + port dans le menu Outils.<br>
+3. Tu cliques <strong>Téléverser</strong> : l'IDE compile ton code et l'écrit dans la mémoire Flash du µC.<br>
+4. La carte exécute ton programme immédiatement — et à chaque remise sous tension, pour toujours, jusqu'au prochain téléversement.</p>
+
+<h3>Le squelette universel : setup() et loop()</h3>
+<pre><span class="c">// Tout sketch Arduino a exactement cette structure :</span>
+<span class="k">void</span> setup() {
+  <span class="c">// exécuté UNE FOIS au démarrage : les réglages</span>
+}
+
+<span class="k">void</span> loop() {
+  <span class="c">// exécuté EN BOUCLE, sans fin : le travail</span>
+}</pre>
+<p>Un programme embarqué <em>ne se termine jamais</em> : après l'initialisation, il tourne tant que la carte est alimentée. <code class="inline">loop()</code> est rappelée automatiquement dès qu'elle finit — c'est la boucle infinie « lire → décider → agir » qui fait vivre toutes les machines.</p>
+
+<div class="tp">
+  <span class="tag">🔧 TP 1 — À toi de jouer : Blink</span>
+  <p>Aucun câblage : la carte UNO a une LED intégrée sur la broche 13. Téléverse ceci :</p>
+<pre><span class="k">void</span> setup() {
+  pinMode(<span class="n">13</span>, <span class="k">OUTPUT</span>);          <span class="c">// broche 13 en sortie</span>
+}
+
+<span class="k">void</span> loop() {
+  digitalWrite(<span class="n">13</span>, <span class="k">HIGH</span>);       <span class="c">// LED allumée</span>
+  delay(<span class="n">500</span>);                    <span class="c">// attendre 500 ms</span>
+  digitalWrite(<span class="n">13</span>, <span class="k">LOW</span>);        <span class="c">// LED éteinte</span>
+  delay(<span class="n">500</span>);
+}</pre>
+  <p><strong>Puis expérimente</strong> — c'est là que l'apprentissage se fait : change les durées (100 ms ? 2000 ms ?), fais deux clignotements rapides puis une pause, ajoute une vraie LED (+ résistance 220 Ω) entre la broche 8 et GND et pilote-la aussi.</p>
+</div>
+
+<div class="cle">
+  <span class="tag">✔ Erreurs classiques de débutant</span>
+  Le point-virgule oublié en fin de ligne (le compilateur proteste — lis son message, il indique la ligne). Le mauvais port sélectionné (rien ne se téléverse). La LED à l'envers (la patte courte va vers GND). Aucune n'est grave : on corrige, on re-téléverse, c'est fait pour ça.
+</div>
+
+<div class="quiz">
+<h4>Quiz express</h4>
+<div class="q">1. Dans quel ordre s'exécutent setup() et loop() ?</div>
+<div class="opts">
+  <button data-ok="1">setup() une fois, puis loop() en boucle sans fin</button>
+  <button data-ok="0">loop() une fois, puis setup() en boucle</button>
+  <button data-ok="0">Les deux en même temps</button>
+</div>
+<div class="exp">setup() = les réglages au démarrage ; loop() = le travail, répété tant que la carte est alimentée.</div>
+<div class="q">2. Que devient ton programme quand tu débranches la carte ?</div>
+<div class="opts">
+  <button data-ok="0">Il est perdu, il faut le re-téléverser</button>
+  <button data-ok="1">Il reste en mémoire Flash et redémarre à la prochaine alimentation</button>
+  <button data-ok="0">Il passe en mode veille</button>
+</div>
+<div class="exp">La Flash est non volatile : le programme survit aux coupures. C'est ce qui rend le µC autonome.</div>
+</div>
+</section>
+
+<!-- ============ MODULE 4 ============ -->
+<section class="module" data-title="4. Binaire">
+<div class="mod-head">
+  <div class="num">MODULE 04 / 14</div>
+  <h2>Le binaire et l'hexadécimal</h2>
+</div>
+<div class="objectifs"><b>Objectifs :</b>
+  <ul>
+    <li>Convertir entre binaire, décimal et hexadécimal</li>
+    <li>Comprendre le bit, l'octet, et le poids des bits</li>
+  </ul>
+</div>
+
+<p class="lead">Ton HIGH et ton LOW du TP 1, c'était déjà du binaire ! Un microcontrôleur ne connaît que deux états : <em>0</em> (tension basse, ~0 V) et <em>1</em> (tension haute, 5 V). Toute l'information — nombres, textes, commandes — est codée avec ces deux chiffres.</p>
+
+<div class="terrain">
+  <span class="tag">⛏ Sur le terrain</span>
+  Un contacteur est enclenché ou pas. Une électrovanne est excitée ou pas. Le binaire, c'est la logique tout-ou-rien de l'électromécanique que tu pratiques déjà tous les jours.
+</div>
+
+<h3>Le poids des bits</h3>
+<p>Chaque position dans un nombre binaire a un <strong>poids</strong> qui double à chaque rang : 1, 2, 4, 8, 16, 32, 64, 128. Pour convertir en décimal, on additionne les poids des bits à 1. Exemple : <code class="inline">1011</code> = 8 + 0 + 2 + 1 = <strong>11</strong>.</p>
+
+<h3>Manipule un registre 8 bits 👇</h3>
+<p>Touche les cases pour basculer les bits et observe la valeur changer :</p>
+<div class="bitreg" id="bitreg">
+  <div class="bits" id="bits"></div>
+  <div class="vals">
+    <span>Décimal <b id="vdec">0</b></span>
+    <span>Hexa <b id="vhex">0x00</b></span>
+    <span>Binaire <b id="vbin">0b00000000</b></span>
+  </div>
+  <div class="hint">8 bits = 1 octet → valeurs de 0 à 255. C'est exactement une case mémoire de µC.</div>
+</div>
+
+<h3>Pourquoi l'hexadécimal ?</h3>
+<p>Écrire <code class="inline">11110100</code> est pénible et source d'erreurs. L'<strong>hexadécimal</strong> (base 16) regroupe les bits par paquets de 4 : chaque paquet devient un chiffre de 0 à F. <code class="inline">1111 0100</code> = <code class="inline">0xF4</code>. Deux caractères au lieu de huit — c'est la notation des datasheets et des trames CAN que tu liras au diagnostic. À retenir : <code class="inline">0xFF</code> = 255 = l'octet plein.</p>
+
+<div class="quiz">
+<h4>Quiz express</h4>
+<div class="q">1. Combien vaut <code class="inline">0b00000101</code> en décimal ?</div>
+<div class="opts">
+  <button data-ok="0">3</button>
+  <button data-ok="1">5</button>
+  <button data-ok="0">101</button>
+</div>
+<div class="exp">Bits à 1 aux poids 4 et 1 → 4 + 1 = 5.</div>
+<div class="q">2. <code class="inline">0xFF</code> correspond à…</div>
+<div class="opts">
+  <button data-ok="0">100 en décimal</button>
+  <button data-ok="1">255 en décimal, soit les 8 bits à 1</button>
+  <button data-ok="0">15 en décimal</button>
+</div>
+<div class="exp">F = 15 → 15×16 + 15 = 255 = 11111111 : l'octet plein.</div>
+</div>
+</section>
+
+<!-- ============ MODULE 5 ============ -->
+<section class="module" data-title="5. Architecture">
+<div class="mod-head">
+  <div class="num">MODULE 05 / 14</div>
+  <h2>L'architecture d'un système à microcontrôleur</h2>
+</div>
+<div class="objectifs"><b>Objectifs :</b>
+  <ul>
+    <li>Situer chaque bloc : µP, mémoires, timers, CAN/CNA, interfaces</li>
+    <li>Comprendre la chaîne complète : capteur → µC → interface de puissance → actionneur</li>
+  </ul>
+</div>
+
+<p class="lead">Un système à microcontrôleur, ce n'est pas seulement la puce : c'est toute une <em>chaîne</em>. Au centre, le <strong>microprocesseur (µP)</strong>, entouré de ses blocs, qui dialogue avec le monde extérieur.</p>
+
+<figure>
+<svg viewBox="0 0 720 460" role="img" aria-label="Architecture complète d'un système à microcontrôleur">
+  <rect x="12" y="46" width="420" height="360" rx="14" fill="#0e2629" stroke="#ff6b6b" stroke-width="2.5"/>
+  <text x="222" y="36" text-anchor="middle" fill="#ff6b6b" font-size="13" font-weight="bold" font-family="monospace">MICROCONTRÔLEUR</text>
+  <rect x="150" y="56" width="70" height="26" rx="6" fill="#123034" stroke="#ffb84d" stroke-width="1.5"/>
+  <text x="185" y="73" text-anchor="middle" fill="#ffb84d" font-size="10" font-weight="bold">QUARTZ</text>
+  <rect x="250" y="56" width="110" height="26" rx="6" fill="#123034" stroke="#ff6b6b" stroke-width="1.5"/>
+  <text x="305" y="73" text-anchor="middle" fill="#ff6b6b" font-size="10" font-weight="bold">ALIMENTATION</text>
+  <rect x="150" y="96" width="110" height="26" rx="6" fill="#123034" stroke="#7fd4ff" stroke-width="1.5"/>
+  <text x="205" y="113" text-anchor="middle" fill="#e9efee" font-size="10" font-weight="bold">OSCILLATEUR</text>
+  <line x1="185" y1="82" x2="195" y2="96" stroke="#93aeab" stroke-width="1.5"/>
+  <rect x="160" y="180" width="100" height="80" rx="10" fill="#1b4a52" stroke="#ffb84d" stroke-width="2.5"/>
+  <text x="210" y="215" text-anchor="middle" fill="#ffb84d" font-size="18" font-weight="bold">µP</text>
+  <text x="210" y="235" text-anchor="middle" fill="#93aeab" font-size="9">microprocesseur</text>
+  <line x1="205" y1="122" x2="208" y2="180" stroke="#93aeab" stroke-width="1.5"/>
+  <rect x="26" y="100" width="76" height="26" rx="6" fill="#123034" stroke="#f59e1f"/>
+  <text x="64" y="117" text-anchor="middle" fill="#e9efee" font-size="10">TIMERS</text>
+  <rect x="26" y="140" width="76" height="26" rx="6" fill="#123034" stroke="#f59e1f"/>
+  <text x="64" y="157" text-anchor="middle" fill="#e9efee" font-size="10">RESET</text>
+  <rect x="26" y="200" width="76" height="26" rx="6" fill="#123034" stroke="#4cd98a"/>
+  <text x="64" y="217" text-anchor="middle" fill="#e9efee" font-size="10">ROM</text>
+  <rect x="26" y="260" width="76" height="40" rx="6" fill="#123034" stroke="#b58cff"/>
+  <text x="64" y="277" text-anchor="middle" fill="#e9efee" font-size="9.5">CHIEN DE</text>
+  <text x="64" y="291" text-anchor="middle" fill="#e9efee" font-size="9.5">GARDE</text>
+  <rect x="290" y="200" width="70" height="26" rx="6" fill="#123034" stroke="#4cd98a"/>
+  <text x="325" y="217" text-anchor="middle" fill="#e9efee" font-size="10">RAM</text>
+  <rect x="160" y="290" width="90" height="26" rx="6" fill="#123034" stroke="#4cd98a"/>
+  <text x="205" y="307" text-anchor="middle" fill="#e9efee" font-size="10">EEPROM</text>
+  <rect x="150" y="330" width="110" height="26" rx="6" fill="#123034" stroke="#7fd4ff"/>
+  <text x="205" y="347" text-anchor="middle" fill="#e9efee" font-size="10">INTERFACE SÉRIE</text>
+  <rect x="300" y="110" width="70" height="26" rx="6" fill="#123034" stroke="#7fd4ff"/>
+  <text x="335" y="127" text-anchor="middle" fill="#e9efee" font-size="10">CNA</text>
+  <rect x="300" y="330" width="70" height="26" rx="6" fill="#123034" stroke="#c9a227"/>
+  <text x="335" y="347" text-anchor="middle" fill="#e9efee" font-size="10">CAN</text>
+  <rect x="330" y="240" width="94" height="52" rx="6" fill="#123034" stroke="#93aeab"/>
+  <text x="377" y="260" text-anchor="middle" fill="#e9efee" font-size="8.5">INTERFACES</text>
+  <text x="377" y="272" text-anchor="middle" fill="#e9efee" font-size="8.5">D'ENTRÉES /</text>
+  <text x="377" y="284" text-anchor="middle" fill="#e9efee" font-size="8.5">SORTIES</text>
+  <line x1="102" y1="113" x2="160" y2="190" stroke="#93aeab" stroke-width="1.3"/>
+  <line x1="102" y1="153" x2="160" y2="200" stroke="#93aeab" stroke-width="1.3"/>
+  <line x1="102" y1="213" x2="160" y2="215" stroke="#93aeab" stroke-width="1.3"/>
+  <line x1="102" y1="275" x2="160" y2="245" stroke="#93aeab" stroke-width="1.3"/>
+  <line x1="260" y1="213" x2="290" y2="213" stroke="#93aeab" stroke-width="1.3"/>
+  <line x1="210" y1="260" x2="207" y2="290" stroke="#93aeab" stroke-width="1.3"/>
+  <line x1="228" y1="260" x2="212" y2="330" stroke="#93aeab" stroke-width="1.3"/>
+  <line x1="260" y1="192" x2="300" y2="128" stroke="#93aeab" stroke-width="1.3"/>
+  <line x1="260" y1="240" x2="308" y2="330" stroke="#93aeab" stroke-width="1.3"/>
+  <line x1="260" y1="228" x2="330" y2="258" stroke="#93aeab" stroke-width="1.3"/>
+  <rect x="470" y="96" width="100" height="30" rx="6" fill="#123034" stroke="#7fd4ff"/>
+  <text x="520" y="115" text-anchor="middle" fill="#e9efee" font-size="10">DRIVER PWM</text>
+  <rect x="470" y="200" width="100" height="44" rx="6" fill="#123034" stroke="#ffb84d"/>
+  <text x="520" y="218" text-anchor="middle" fill="#e9efee" font-size="9">INTERFACE DE</text>
+  <text x="520" y="231" text-anchor="middle" fill="#e9efee" font-size="9">PUISSANCE</text>
+  <rect x="610" y="200" width="98" height="44" rx="6" fill="#1b4a52" stroke="#4cd98a" stroke-width="2"/>
+  <text x="659" y="226" text-anchor="middle" fill="#e9efee" font-size="10" font-weight="bold">ACTIONNEUR</text>
+  <rect x="470" y="320" width="100" height="30" rx="6" fill="#1b4a52" stroke="#4cd98a" stroke-width="2"/>
+  <text x="520" y="339" text-anchor="middle" fill="#e9efee" font-size="10" font-weight="bold">CAPTEURS</text>
+  <rect x="610" y="310" width="98" height="50" rx="6" fill="#123034" stroke="#93aeab"/>
+  <text x="659" y="329" text-anchor="middle" fill="#e9efee" font-size="8.5">ÉLÉMENT À</text>
+  <text x="659" y="341" text-anchor="middle" fill="#e9efee" font-size="8.5">DÉTECTER /</text>
+  <text x="659" y="353" text-anchor="middle" fill="#e9efee" font-size="8.5">MESURER</text>
+  <line x1="432" y1="111" x2="470" y2="111" stroke="#f59e1f" stroke-width="1.6"/>
+  <line x1="520" y1="126" x2="520" y2="200" stroke="#f59e1f" stroke-width="1.6"/>
+  <line x1="424" y1="266" x2="470" y2="230" stroke="#f59e1f" stroke-width="1.6"/>
+  <line x1="570" y1="222" x2="610" y2="222" stroke="#f59e1f" stroke-width="1.6"/>
+  <line x1="610" y1="335" x2="570" y2="335" stroke="#f59e1f" stroke-width="1.6"/>
+  <line x1="470" y1="335" x2="370" y2="343" stroke="#f59e1f" stroke-width="1.6" stroke-dasharray="5"/>
+  <rect x="90" y="418" width="270" height="32" rx="6" fill="#123034" stroke="#7fd4ff"/>
+  <text x="225" y="438" text-anchor="middle" fill="#e9efee" font-size="9.5">Communication avec un appareil ou d'autres µC</text>
+  <line x1="205" y1="356" x2="215" y2="418" stroke="#93aeab" stroke-width="1.3"/>
+</svg>
+<figcaption>Le schéma de référence du cours : le µP et ses blocs, puis la chaîne vers le monde réel.</figcaption>
+</figure>
+
+<h3>Le µP : le chef d'orchestre</h3>
+<p>À l'intérieur, une <strong>unité de calcul</strong> (l'ALU et ses registres, qui exécutent les opérations) et une <strong>unité de contrôle</strong> (qui supervise le déroulement de toutes les opérations), reliées par le bus. Le <strong>quartz</strong> et l'oscillateur donnent le battement de cœur : 16 millions de tics par seconde sur un UNO. Le <strong>reset</strong> ramène tout au point de départ.</p>
+<p>Au fait — les circuits du µP sont bâtis avec des portes logiques que tu connais sans le savoir : la porte <strong>ET</strong>, c'est des contacts en série ; la porte <strong>OU</strong>, des contacts en parallèle ; et la mémoire élémentaire (la bascule), c'est l'auto-maintien d'un contacteur. L'électronique numérique, c'est ton schéma électrique en millions d'exemplaires microscopiques.</p>
+
+<h3>Les mémoires</h3>
+<div class="tscroll"><table>
+<tr><th>Mémoire</th><th>Contenu</th><th>À la coupure ?</th></tr>
+<tr><td><b>Flash</b> (la ROM moderne)</td><td>Ton programme</td><td>Conservé</td></tr>
+<tr><td><b>RAM</b></td><td>Les variables pendant l'exécution</td><td>Perdu</td></tr>
+<tr><td><b>EEPROM</b></td><td>Petites données à garder (réglages, compteurs)</td><td>Conservé</td></tr>
+</table></div>
+
+<div class="terrain">
+  <span class="tag">⛏ Sur le terrain</span>
+  Un module de foreuse qui perd ses paramètres après un remplacement de batterie : ils étaient en RAM. Les compteurs horaires qui survivent : EEPROM ou Flash. Ce détail change ta procédure de remplacement de module.
+</div>
+
+<h3>CAN et CNA : les ponts entre deux mondes</h3>
+<p>Le <strong>CAN</strong> (Convertisseur Analogique-Numérique, <em>ADC</em> en anglais) traduit une tension en nombre : c'est lui qui permet de lire un capteur analogique. Le <strong>CNA</strong> (<em>DAC</em>) fait l'inverse : d'un nombre vers une tension.</p>
+<div class="cle">
+  <span class="tag">✔ Attention au vocabulaire</span>
+  En français, <strong>CAN</strong> désigne le convertisseur A/N… mais aussi le <strong>bus CAN</strong> des véhicules et engins ! Deux choses totalement différentes, même sigle. « Le CAN du capteur » = convertisseur ; « le bus CAN de la machine » = réseau. Le contexte tranche toujours.
+</div>
+
+<h3>La chaîne complète</h3>
+<p><strong>Côté sortie :</strong> µC → driver PWM → <em>interface de puissance</em> (transistors, relais) → actionneur. <strong>Côté entrée :</strong> élément à mesurer → capteur → (CAN si analogique) → µC. Tout système embarqué est une variation de cette chaîne.</p>
+
+<div class="quiz">
+<h4>Quiz express</h4>
+<div class="q">1. Quelle mémoire garde ton programme après une coupure de courant ?</div>
+<div class="opts">
+  <button data-ok="1">La Flash</button>
+  <button data-ok="0">La RAM</button>
+  <button data-ok="0">Aucune</button>
+</div>
+<div class="exp">La Flash est non volatile : ton Blink du module 3 y vit toujours.</div>
+<div class="q">2. Le µC doit piloter un moteur de plusieurs ampères. Il lui faut…</div>
+<div class="opts">
+  <button data-ok="1">Une interface de puissance entre le µC et le moteur</button>
+  <button data-ok="0">Rien, la broche suffit</button>
+  <button data-ok="0">Un deuxième quartz</button>
+</div>
+<div class="exp">Une broche fournit quelques mA : sans transistor/relais, elle grille. Règle n°3 du module 2.</div>
+</div>
+</section>
+
+<!-- ============ MODULE 6 ============ -->
+<section class="module" data-title="6. Capteurs & actionneurs">
+<div class="mod-head">
+  <div class="num">MODULE 06 / 14</div>
+  <h2>Capteurs et actionneurs</h2>
+</div>
+<div class="objectifs"><b>Objectifs :</b>
+  <ul>
+    <li>Définir capteur et actionneur</li>
+    <li>Classer les capteurs : analogiques, numériques, logiques</li>
+  </ul>
+</div>
+
+<p class="lead">Le µC perçoit le monde par ses <strong>capteurs</strong> et agit dessus par ses <strong>actionneurs</strong>. Toute la suite du cours consiste à apprendre à les brancher et à les programmer.</p>
+
+<h3>Le capteur : percevoir</h3>
+<p>Un <strong>capteur</strong> transforme une grandeur physique (température, pression, lumière…) en une grandeur électrique exploitable. On les classe en <strong>trois groupes</strong> selon leur signal de sortie :</p>
+<div class="tscroll"><table>
+<tr><th>Type</th><th>Signal de sortie</th><th>Exemples</th><th>Lecture Arduino</th></tr>
+<tr><td><b>Logique (TOR)</b></td><td>Tout Ou Rien : 0 ou 1</td><td>Bouton, fin de course, pressostat</td><td><code class="inline">digitalRead()</code></td></tr>
+<tr><td><b>Analogique</b></td><td>Tension continûment variable</td><td>Potentiomètre, LDR, capteur de gaz MQ-2, transducteur de pression</td><td><code class="inline">analogRead()</code> (via le CAN)</td></tr>
+<tr><td><b>Numérique</b></td><td>Données codées (trames)</td><td>DHT11 (température/humidité), capteurs I2C/SPI</td><td>Bibliothèque + bus de communication</td></tr>
+</table></div>
+
+<div class="terrain">
+  <span class="tag">⛏ Sur le terrain</span>
+  Sur une foreuse tu as les trois : fins de course et pressostats (logiques), transducteurs de pression (analogiques), capteurs « intelligents » sur le bus (numériques). Identifier le type, c'est savoir <em>où</em> et <em>comment</em> mesurer au diagnostic.
+</div>
+
+<h3>L'actionneur : agir</h3>
+<p>Les <strong>actionneurs</strong> transforment l'énergie en phénomène physique : mouvement (moteurs, servos, électrovannes), chaleur (résistances), lumière (LEDs, afficheurs), son (buzzers). Rappel de la règle n°3 : au-delà de quelques milliampères, jamais en direct sur la broche — transistor ou relais obligatoire.</p>
+
+<div class="cle">
+  <span class="tag">✔ À retenir</span>
+  La chaîne se lit dans les deux sens : <strong>grandeur physique → capteur → µC → interface de puissance → actionneur → action</strong>. Exemple complet : un basculement automatique entre deux sources d'énergie — capteurs de tension en entrée, décision dans le µC, contacteurs en sortie. C'est la chaîne du module 5, appliquée telle quelle.
+</div>
+
+<div class="quiz">
+<h4>Quiz express</h4>
+<div class="q">1. Un bouton poussoir est un capteur…</div>
+<div class="opts">
+  <button data-ok="0">Analogique</button>
+  <button data-ok="0">Numérique</button>
+  <button data-ok="1">Logique (tout ou rien)</button>
+</div>
+<div class="exp">Deux états, appuyé ou relâché : lu avec digitalRead().</div>
+<div class="q">2. Un capteur de gaz MQ-2 sort une tension variable. On le lit avec…</div>
+<div class="opts">
+  <button data-ok="1">analogRead(), qui passe par le CAN</button>
+  <button data-ok="0">digitalRead()</button>
+  <button data-ok="0">Le CNA</button>
+</div>
+<div class="exp">Signal analogique → conversion en nombre obligatoire avant traitement.</div>
+</div>
+</section>
+
+<!-- ============ MODULE 7 ============ -->
+<section class="module" data-title="7. LED & bouton">
+<div class="mod-head">
+  <div class="num">MODULE 07 / 14</div>
+  <h2>Entrées / sorties : LED et bouton</h2>
+</div>
+<div class="objectifs"><b>Objectifs :</b>
+  <ul>
+    <li>Piloter une sortie et lire une entrée</li>
+    <li>Comprendre le pull-up et pourquoi une entrée « en l'air » ment</li>
+  </ul>
+</div>
+
+<p class="lead">Les broches <strong>GPIO</strong> sont les mains du microcontrôleur. Trois fonctions Arduino suffisent pour tout le tout-ou-rien :</p>
+<div class="tscroll"><table>
+<tr><th>Fonction</th><th>Rôle</th><th>Analogie</th></tr>
+<tr><td><code class="inline">pinMode(broche, mode)</code></td><td>Choisir : entrée ou sortie</td><td>Le sélecteur du multimètre</td></tr>
+<tr><td><code class="inline">digitalWrite(broche, HIGH/LOW)</code></td><td>Écrire une sortie</td><td>L'interrupteur de commande</td></tr>
+<tr><td><code class="inline">digitalRead(broche)</code></td><td>Lire une entrée</td><td>La lecture au voltmètre</td></tr>
+</table></div>
+
+<h3>Le piège de l'entrée « en l'air »</h3>
+<p>Une entrée reliée à rien n'est ni à 0 ni à 1 : elle <strong>flotte</strong> et capte les parasites — la lecture devient aléatoire. Il faut lui imposer un état de repos avec une résistance de <strong>pull-up</strong> (vers le +) ou <strong>pull-down</strong> (vers la masse). Bonne nouvelle : l'Arduino a des pull-ups internes, activées par <code class="inline">pinMode(2, INPUT_PULLUP)</code> — le bouton se câble alors simplement entre la broche et GND, et la logique s'inverse : <em>appuyé = LOW</em>.</p>
+
+<div class="terrain">
+  <span class="tag">⛏ Sur le terrain</span>
+  Un fil de commande débranché « flotte » et déclenche des défauts fantômes intermittents. Face à un signal incohérent, vérifie toujours si l'entrée a bien son potentiel de référence — sur breadboard comme sur machine.
+</div>
+
+<div class="tp">
+  <span class="tag">🔧 TP 2 — Le bouton qui commande la LED</span>
+  <p><strong>Montage :</strong> LED + résistance 220 Ω entre broche 8 et GND. Bouton entre broche 2 et GND (pull-up interne, pas d'autre composant).</p>
+<pre><span class="k">void</span> setup() {
+  pinMode(<span class="n">8</span>, <span class="k">OUTPUT</span>);
+  pinMode(<span class="n">2</span>, <span class="k">INPUT_PULLUP</span>);       <span class="c">// bouton vers GND</span>
+}
+
+<span class="k">void</span> loop() {
+  <span class="k">if</span> (digitalRead(<span class="n">2</span>) == <span class="k">LOW</span>) {   <span class="c">// appuyé (logique inversée)</span>
+    digitalWrite(<span class="n">8</span>, <span class="k">HIGH</span>);
+  } <span class="k">else</span> {
+    digitalWrite(<span class="n">8</span>, <span class="k">LOW</span>);
+  }
+}</pre>
+  <p><strong>Expérimente :</strong> inverse le comportement (LED allumée au repos), puis fais un télérupteur : un appui allume, l'appui suivant éteint (indice : il faut mémoriser un état dans une variable — et tu découvriras le phénomène de rebond du bouton !).</p>
+</div>
+
+<div class="cle">
+  <span class="tag">✔ Pour aller plus loin (les registres)</span>
+  Sous le capot, <code class="inline">digitalWrite()</code> écrit un bit dans un registre du port (sur AVR : DDRx pour la direction, PORTx pour l'écriture, PINx pour la lecture). C'est ce que font tous les µC industriels, Arduino ou pas — utile à savoir quand tu liras une datasheet, inutile à manipuler pour débuter.
+</div>
+
+<div class="quiz">
+<h4>Quiz express</h4>
+<div class="q">1. Avec INPUT_PULLUP et un bouton câblé vers GND, un appui se lit…</div>
+<div class="opts">
+  <button data-ok="1">LOW</button>
+  <button data-ok="0">HIGH</button>
+  <button data-ok="0">Impossible à lire</button>
+</div>
+<div class="exp">Le pull-up tient la broche à HIGH au repos ; l'appui la relie à la masse → LOW. Logique inversée, très courante.</div>
+<div class="q">2. Une entrée laissée « en l'air » donne une lecture…</div>
+<div class="opts">
+  <button data-ok="0">Toujours 0</button>
+  <button data-ok="0">Toujours 1</button>
+  <button data-ok="1">Aléatoire et sensible aux parasites</button>
+</div>
+<div class="exp">Sans référence, la broche flotte : d'où les pull-up/pull-down.</div>
+</div>
+</section>
+
+<!-- ============ MODULE 8 ============ -->
+<section class="module" data-title="8. Programmer">
+<div class="mod-head">
+  <div class="num">MODULE 08 / 14</div>
+  <h2>Programmer en clair : variables, décisions, répétitions</h2>
+</div>
+<div class="objectifs"><b>Objectifs :</b>
+  <ul>
+    <li>Utiliser variables, conditions et boucles</li>
+    <li>Se servir du moniteur série : les yeux du programme</li>
+  </ul>
+</div>
+
+<p class="lead">Programmer, c'est écrire une histoire que le µC va vivre comme sa seule réalité. Et cette histoire tient avec trois briques : <strong>retenir</strong> (variables), <strong>décider</strong> (conditions), <strong>répéter</strong> (boucles).</p>
+
+<h3>Les trois briques</h3>
+<pre><span class="c">// RETENIR : une variable est une case mémoire nommée</span>
+<span class="k">int</span> seuil = <span class="n">300</span>;
+<span class="k">int</span> mesure = <span class="n">0</span>;
+
+<span class="c">// DÉCIDER : if / else</span>
+<span class="k">if</span> (mesure &gt; seuil) {
+  digitalWrite(<span class="n">8</span>, <span class="k">HIGH</span>);     <span class="c">// alarme</span>
+} <span class="k">else</span> {
+  digitalWrite(<span class="n">8</span>, <span class="k">LOW</span>);
+}
+
+<span class="c">// RÉPÉTER : for</span>
+<span class="k">for</span> (<span class="k">int</span> i = <span class="n">0</span>; i &lt; <span class="n">3</span>; i++) {
+  digitalWrite(<span class="n">8</span>, <span class="k">HIGH</span>); delay(<span class="n">100</span>);
+  digitalWrite(<span class="n">8</span>, <span class="k">LOW</span>);  delay(<span class="n">100</span>);
+}</pre>
+<p>Et pour ranger : une <strong>fonction</strong> regroupe des lignes sous un nom (<code class="inline">clignoter(3);</code> est plus lisible que dix lignes répétées). Tu en utilises déjà : <code class="inline">digitalWrite()</code> est une fonction écrite par d'autres.</p>
+
+<h3>Le moniteur série : les yeux de ton programme</h3>
+<p>Le µC n'a pas d'écran — mais il peut <em>parler</em> à ton PC par le câble USB. C'est l'outil de mise au point n°1, celui que tu ouvriras à chaque TP :</p>
+<pre><span class="k">void</span> setup() {
+  Serial.begin(<span class="n">9600</span>);              <span class="c">// ouvrir la liaison, 9600 bauds</span>
+}
+
+<span class="k">void</span> loop() {
+  Serial.print(<span class="s">"Mesure : "</span>);
+  Serial.println(mesure);           <span class="c">// affiche + retour à la ligne</span>
+  delay(<span class="n">500</span>);
+}</pre>
+
+<div class="terrain">
+  <span class="tag">⛏ Sur le terrain</span>
+  La boucle « lire → décider → agir » est ta démarche de diagnostic : mesurer, comparer au seuil, intervenir. Et le moniteur série, c'est ta valise de diagnostic branchée sur la machine : il te montre ce que le programme « pense ».
+</div>
+
+<div class="tp">
+  <span class="tag">🔧 TP 3 — Compteur d'appuis</span>
+  <p>Reprends le montage du TP 2 et affiche au moniteur série le nombre d'appuis sur le bouton. Indice : une variable <code class="inline">int compteur = 0;</code> déclarée <em>avant</em> setup(), incrémentée avec <code class="inline">compteur = compteur + 1;</code> à chaque appui détecté. Bonus : ajoute <code class="inline">delay(200);</code> après la détection et observe pourquoi ça compte mieux (le rebond, encore lui).</p>
+</div>
+
+<div class="quiz">
+<h4>Quiz express</h4>
+<div class="q">1. À quoi sert Serial.println() ?</div>
+<div class="opts">
+  <button data-ok="1">À envoyer du texte vers le PC pour voir ce que fait le programme</button>
+  <button data-ok="0">À allumer une LED série</button>
+  <button data-ok="0">À accélérer le programme</button>
+</div>
+<div class="exp">C'est l'outil de mise au point fondamental : le programme te raconte ce qu'il vit.</div>
+<div class="q">2. Que fait ce code : for (int i = 0; i &lt; 5; i++) { clignoter(); } ?</div>
+<div class="opts">
+  <button data-ok="0">Il clignote sans fin</button>
+  <button data-ok="1">Il appelle clignoter() exactement 5 fois</button>
+  <button data-ok="0">Il clignote une seule fois</button>
+</div>
+<div class="exp">i prend les valeurs 0,1,2,3,4 : cinq passages dans la boucle.</div>
+</div>
+</section>
+
+<!-- ============ MODULE 9 ============ -->
+<section class="module" data-title="9. Le temps">
+<div class="mod-head">
+  <div class="num">MODULE 09 / 14</div>
+  <h2>Maîtriser le temps : delay(), millis() et le chien de garde</h2>
+</div>
+<div class="objectifs"><b>Objectifs :</b>
+  <ul>
+    <li>Comprendre pourquoi delay() bloque tout</li>
+    <li>Clignoter sans bloquer avec millis()</li>
+    <li>Connaître le rôle du chien de garde</li>
+  </ul>
+</div>
+
+<p class="lead">Jusqu'ici, <code class="inline">delay()</code> nous suffisait. Mais il a un défaut grave : pendant l'attente, le µC ne fait <strong>rien d'autre</strong>. Plus de lecture de bouton, plus de surveillance de capteur, plus de sécurité.</p>
+
+<div class="terrain">
+  <span class="tag">⛏ Sur le terrain</span>
+  delay(), c'est le mécano qui fixe le chrono en attendant que l'huile chauffe. millis(), c'est celui qui règle une minuterie et continue son inspection. Un système de sécurité ne doit jamais fixer le chrono.
+</div>
+
+<h3>millis() : l'horloge qui tourne toute seule</h3>
+<p>Grâce aux <strong>timers</strong> matériels du µC (des compteurs qui avancent en arrière-plan, sans occuper le processeur), la fonction <code class="inline">millis()</code> te donne à tout instant le nombre de millisecondes écoulées depuis le démarrage. La recette du « clignoter sans bloquer » :</p>
+<pre><span class="k">unsigned long</span> dernierTop = <span class="n">0</span>;
+<span class="k">bool</span> etatLed = <span class="k">false</span>;
+
+<span class="k">void</span> loop() {
+  <span class="k">if</span> (millis() - dernierTop &gt;= <span class="n">500</span>) {   <span class="c">// 500 ms écoulées ?</span>
+    dernierTop = millis();               <span class="c">// noter l'heure du top</span>
+    etatLed = !etatLed;                  <span class="c">// inverser</span>
+    digitalWrite(<span class="n">13</span>, etatLed);
+  }
+  <span class="c">// ...et ici, le programme reste LIBRE de faire autre chose !</span>
+  <span class="k">if</span> (digitalRead(<span class="n">2</span>) == <span class="k">LOW</span>) { <span class="c">/* réagir au bouton immédiatement */</span> }
+}</pre>
+
+<h3>Le chien de garde (watchdog)</h3>
+<p>Autre service rendu par un timer : le <strong>chien de garde</strong> redémarre le µC si le programme reste bloqué. En fonctionnement normal, le programme « caresse le chien » régulièrement (il remet un compteur à zéro) ; s'il cesse de le faire — programme planté, boucle sans sortie — le chien mord : <em>reset</em> automatique. C'est l'assurance-vie des systèmes qui doivent tourner sans surveillance.</p>
+
+<div class="terrain">
+  <span class="tag">⛏ Sur le terrain</span>
+  Un module de foreuse qui redémarre tout seul de façon répétée : c'est peut-être son chien de garde qui mord parce que le programme se bloque (souvent sur une communication qui ne répond pas). Le redémarrage est le symptôme, pas la panne.
+</div>
+
+<div class="tp">
+  <span class="tag">🔧 TP 4 — Clignoter ET surveiller en même temps</span>
+  <p>Monte LED (broche 8) + bouton (broche 2, INPUT_PULLUP). Objectif : la LED 13 clignote toutes les 500 ms <em>pendant que</em> la LED 8 suit le bouton instantanément. Essaie d'abord avec delay() pour constater le problème (le bouton répond mal), puis avec millis() : tout devient fluide. Tu viens de comprendre pourquoi tout l'embarqué industriel bannit les attentes bloquantes.</p>
+</div>
+
+<div class="quiz">
+<h4>Quiz express</h4>
+<div class="q">1. Le problème de delay(2000) dans un système de surveillance :</div>
+<div class="opts">
+  <button data-ok="1">Pendant 2 s, plus rien n'est surveillé ni lu</button>
+  <button data-ok="0">Il use la mémoire Flash</button>
+  <button data-ok="0">Il consomme trop de courant</button>
+</div>
+<div class="exp">delay() gèle tout le programme. millis() permet d'attendre sans bloquer.</div>
+<div class="q">2. Un µC redémarre automatiquement quand son programme se bloque. Qui agit ?</div>
+<div class="opts">
+  <button data-ok="0">La RAM</button>
+  <button data-ok="1">Le chien de garde</button>
+  <button data-ok="0">Le moniteur série</button>
+</div>
+<div class="exp">Le watchdog n'est plus « caressé » → il force un reset. Symptôme classique : des redémarrages en boucle.</div>
+</div>
+</section>
+
+<!-- ============ MODULE 10 ============ -->
+<section class="module" data-title="10. Interruptions">
+<div class="mod-head">
+  <div class="num">MODULE 10 / 14</div>
+  <h2>Les interruptions : réagir immédiatement</h2>
+</div>
+<div class="objectifs"><b>Objectifs :</b>
+  <ul>
+    <li>Comprendre le mécanisme d'interruption</li>
+    <li>Utiliser attachInterrupt() pour un événement urgent</li>
+  </ul>
+</div>
+
+<p class="lead">Vérifier le bouton à chaque tour de loop(), ça marche… tant que loop() tourne vite. Une <strong>interruption</strong> renverse la logique : c'est l'<em>événement</em> qui prévient le processeur, qui suspend alors le programme, exécute une petite routine dédiée, puis reprend exactement où il en était.</p>
+
+<div class="terrain">
+  <span class="tag">⛏ Sur le terrain</span>
+  Vérifier en boucle, c'est aller voir la machine toutes les 5 minutes. L'interruption, c'est le voyant qui bipe dès le défaut. Pour un arrêt d'urgence, il n'y a pas débat : réaction immédiate obligatoire.
+</div>
+
+<h3>En Arduino : attachInterrupt()</h3>
+<p>Sur un UNO, les broches 2 et 3 acceptent les interruptions externes :</p>
+<pre><span class="k">volatile</span> <span class="k">bool</span> urgence = <span class="k">false</span>;
+
+<span class="k">void</span> alerte() {                    <span class="c">// la routine d'interruption : COURTE</span>
+  urgence = <span class="k">true</span>;                  <span class="c">// on lève juste un drapeau</span>
+}
+
+<span class="k">void</span> setup() {
+  pinMode(<span class="n">2</span>, <span class="k">INPUT_PULLUP</span>);
+  attachInterrupt(digitalPinToInterrupt(<span class="n">2</span>), alerte, <span class="k">FALLING</span>);
+}                                   <span class="c">// FALLING = front descendant (appui)</span>
+
+<span class="k">void</span> loop() {
+  <span class="k">if</span> (urgence) {                   <span class="c">// le traitement se fait ICI</span>
+    toutArreter();
+    urgence = <span class="k">false</span>;
+  }
+  travailNormal();
+}</pre>
+
+<div class="cle">
+  <span class="tag">✔ Les deux règles d'or</span>
+  <strong>1. La routine reste courte</strong> : lever un drapeau, noter une valeur, sortir. Le vrai traitement se fait dans loop().<br>
+  <strong>2. <code class="inline">volatile</code> est obligatoire</strong> sur toute variable partagée avec la routine : ce mot-clé dit au compilateur « cette variable peut changer à tout instant, relis-la vraiment en mémoire ».
+</div>
+
+<div class="quiz">
+<h4>Quiz express</h4>
+<div class="q">1. Une bonne routine d'interruption doit être…</div>
+<div class="opts">
+  <button data-ok="1">La plus courte possible</button>
+  <button data-ok="0">La plus complète possible</button>
+  <button data-ok="0">Remplie de delay()</button>
+</div>
+<div class="exp">Pendant la routine, le reste du programme est suspendu : minimum d'actions, et surtout jamais d'attente.</div>
+<div class="q">2. Pourquoi volatile sur le drapeau partagé ?</div>
+<div class="opts">
+  <button data-ok="0">Pour le rendre plus rapide</button>
+  <button data-ok="1">Pour forcer le compilateur à le relire en mémoire à chaque accès</button>
+  <button data-ok="0">Pour le stocker en Flash</button>
+</div>
+<div class="exp">Sans volatile, le compilateur peut « optimiser » la lecture et ne jamais voir le changement fait par l'interruption.</div>
+</div>
+</section>
+
+<!-- ============ MODULE 11 ============ -->
+<section class="module" data-title="11. PWM">
+<div class="mod-head">
+  <div class="num">MODULE 11 / 14</div>
+  <h2>Le PWM : doser la puissance</h2>
+</div>
+<div class="objectifs"><b>Objectifs :</b>
+  <ul>
+    <li>Comprendre le rapport cyclique</li>
+    <li>Utiliser analogWrite() pour varier une intensité</li>
+  </ul>
+</div>
+
+<p class="lead">Une broche ne sait produire que 0 ou 5 V — tout ou rien. Comment alors tamiser une LED ou ralentir un moteur ? En commutant <em>très vite</em> : c'est le <strong>PWM</strong> (modulation de largeur d'impulsion). La valeur moyenne perçue dépend du <strong>rapport cyclique</strong> : le pourcentage du temps passé à l'état haut.</p>
+
+<h3>Essaie toi-même 👇</h3>
+<div class="pwmdemo">
+  <div class="led" id="pwmled"></div>
+  <input type="range" id="pwmslider" min="0" max="100" value="50" aria-label="Rapport cyclique PWM">
+  <div class="stat">Rapport cyclique : <b id="pwmval">50 %</b> → tension moyenne : <b id="pwmv">2,5 V</b> (sur 5 V)</div>
+  <figure style="margin:14px 0 0">
+    <svg viewBox="0 0 600 90" role="img" aria-label="Signal PWM">
+      <line x1="20" y1="75" x2="580" y2="75" stroke="#1e4046" stroke-width="1"/>
+      <line x1="20" y1="20" x2="580" y2="20" stroke="#1e4046" stroke-width="1" stroke-dasharray="4"/>
+      <text x="12" y="24" fill="#93aeab" font-size="10" text-anchor="end">5V</text>
+      <text x="12" y="79" fill="#93aeab" font-size="10" text-anchor="end">0V</text>
+      <path id="pwmwave" d="" fill="none" stroke="#ffb84d" stroke-width="2.5"/>
+    </svg>
+  </figure>
+</div>
+
+<h3>En Arduino : analogWrite()</h3>
+<p>Sur les broches marquées <strong>~</strong> (3, 5, 6, 9, 10, 11 sur un UNO) :</p>
+<pre>analogWrite(<span class="n">9</span>, <span class="n">0</span>);      <span class="c">// 0 % : éteint</span>
+analogWrite(<span class="n">9</span>, <span class="n">127</span>);    <span class="c">// ~50 % : demi-intensité</span>
+analogWrite(<span class="n">9</span>, <span class="n">255</span>);    <span class="c">// 100 % : pleine puissance</span></pre>
+<p>La valeur va de 0 à 255 (un octet — tu reconnais le module 4 !). Malgré son nom, <code class="inline">analogWrite()</code> ne produit pas une vraie tension analogique : c'est bien du découpage PWM.</p>
+
+<div class="terrain">
+  <span class="tag">⛏ Sur le terrain</span>
+  Les électrovannes proportionnelles des circuits hydrauliques (rotation, avance, percussion) sont pilotées en PWM : le module fait varier le rapport cyclique → courant dans la bobine → ouverture du tiroir → débit. Un signal « carré » mesuré sur une bobine Y601 au lieu d'un continu propre : c'est normal, c'est du PWM. Et l'avantage est énorme : un transistor tout-ou-rien ne chauffe presque pas.
+</div>
+
+<div class="tp">
+  <span class="tag">🔧 TP 5 — Respiration lumineuse</span>
+  <p>LED + résistance sur la broche 9. Fais-la « respirer » : deux boucles for qui font monter puis descendre la valeur d'analogWrite() de 0 à 255 et retour, avec un petit delay(5) à chaque pas. Bonus : remplace les delay() par la technique millis() du module 9.</p>
+</div>
+
+<div class="quiz">
+<h4>Quiz express</h4>
+<div class="q">1. analogWrite(broche, 51) sur 5 V donne une moyenne d'environ…</div>
+<div class="opts">
+  <button data-ok="1">1 V (20 % de 5 V)</button>
+  <button data-ok="0">4 V</button>
+  <button data-ok="0">2,5 V</button>
+</div>
+<div class="exp">51/255 = 20 % de rapport cyclique → 5 × 0,20 = 1 V de moyenne.</div>
+<div class="q">2. Pourquoi piloter une électrovanne proportionnelle en PWM plutôt qu'en tension variable ?</div>
+<div class="opts">
+  <button data-ok="0">C'est plus joli à l'oscilloscope</button>
+  <button data-ok="1">Le transistor commute tout-ou-rien : presque pas de pertes par échauffement</button>
+  <button data-ok="0">Ça évite d'utiliser un µC</button>
+</div>
+<div class="exp">Un transistor en régime linéaire chaufferait énormément ; en commutation il dissipe presque rien.</div>
+</div>
+</section>
+
+<!-- ============ MODULE 12 ============ -->
+<section class="module" data-title="12. ADC">
+<div class="mod-head">
+  <div class="num">MODULE 12 / 14</div>
+  <h2>Lire l'analogique : analogRead() et le CAN</h2>
+</div>
+<div class="objectifs"><b>Objectifs :</b>
+  <ul>
+    <li>Lire une tension avec analogRead()</li>
+    <li>Convertir une lecture en grandeur physique (mise à l'échelle)</li>
+  </ul>
+</div>
+
+<p class="lead">Le monde réel est <strong>analogique</strong> : une pression, une température, une lumière varient continûment. Le <strong>CAN</strong> du µC (module 5) transforme la tension en nombre — et sur Arduino, une seule fonction suffit : <code class="inline">analogRead()</code>.</p>
+
+<h3>La résolution : 1024 paliers</h3>
+<p>Le CAN de l'UNO travaille sur <strong>10 bits</strong> : il découpe 0–5 V en 2¹⁰ = 1024 paliers. <code class="inline">analogRead(A0)</code> renvoie donc un nombre de <strong>0 à 1023</strong> : 0 pour 0 V, 1023 pour 5 V, 512 pour ~2,5 V.</p>
+<div class="cle">
+  <span class="tag">✔ Formule de mise à l'échelle</span>
+  Tension = lecture × 5.0 / 1023. Et pour passer à la grandeur physique, on applique la caractéristique du capteur. Exemple, capteur de pression 0,5–4,5 V pour 0–250 bar :<br>
+  <code class="inline">float bar = (volts - 0.5) * 250.0 / 4.0;</code>
+</div>
+
+<div class="terrain">
+  <span class="tag">⛏ Sur le terrain</span>
+  Les transducteurs de pression des foreuses (B601P, B603P…) sortent 0,5–4,5 V ou 4–20 mA. La plage <em>décalée</em> est volontaire : si tu lis 0 V pile, ce n'est pas une pression nulle — c'est un <strong>fil coupé</strong>. Le décalage transforme la panne en diagnostic. Retiens ce réflexe : 0 V sur un capteur 0,5–4,5 V = circuit ouvert.
+</div>
+
+<div class="tp">
+  <span class="tag">🔧 TP 6 — Potentiomètre et veilleuse automatique</span>
+  <p><strong>Étape 1 :</strong> potentiomètre sur A0 (pattes extrêmes sur 5 V et GND, curseur sur A0). Affiche la valeur au moniteur série et tourne : tu vois défiler 0 → 1023.</p>
+<pre><span class="k">int</span> brut = analogRead(<span class="k">A0</span>);
+<span class="k">float</span> volts = brut * <span class="n">5.0</span> / <span class="n">1023.0</span>;
+Serial.println(volts);</pre>
+  <p><strong>Étape 2 :</strong> remplace le potentiomètre par une LDR en pont diviseur avec une résistance de 10 kΩ, et pilote la LED : allumée quand il fait sombre (lecture sous un seuil). Tu viens de construire une veilleuse automatique — capteur → décision → actionneur, la chaîne complète.</p>
+</div>
+
+<div class="quiz">
+<h4>Quiz express</h4>
+<div class="q">1. analogRead() renvoie 1023. La tension d'entrée est…</div>
+<div class="opts">
+  <button data-ok="0">1,023 V</button>
+  <button data-ok="1">≈ 5 V (pleine échelle)</button>
+  <button data-ok="0">0 V</button>
+</div>
+<div class="exp">1023 est la valeur maximale du CAN 10 bits : l'entrée est à la tension de référence.</div>
+<div class="q">2. Un capteur 0,5–4,5 V renvoie 0 V. Diagnostic le plus probable :</div>
+<div class="opts">
+  <button data-ok="1">Circuit ouvert : fil coupé ou capteur débranché</button>
+  <button data-ok="0">Pression exactement nulle</button>
+  <button data-ok="0">CAN saturé</button>
+</div>
+<div class="exp">La plage décalée sert exactement à ça : 0 V est hors fonctionnement normal → défaut de câblage.</div>
+</div>
+</section>
+
+<!-- ============ MODULE 13 ============ -->
+<section class="module" data-title="13. Communications">
+<div class="mod-head">
+  <div class="num">MODULE 13 / 14</div>
+  <h2>Communiquer : du câble USB au bus CAN</h2>
+</div>
+<div class="objectifs"><b>Objectifs :</b>
+  <ul>
+    <li>Comprendre le principe des liaisons série</li>
+    <li>Distinguer UART, I2C, SPI et le bus CAN</li>
+  </ul>
+</div>
+
+<p class="lead">Un µC seul, c'est bien. Des µC qui <strong>se parlent</strong>, c'est une machine moderne. Les liaisons <em>série</em> envoient les bits un par un sur quelques fils — et tu en utilises déjà une depuis le module 8 : <code class="inline">Serial</code>, c'est l'UART de la carte.</p>
+
+<h3>Les quatre protocoles à connaître</h3>
+<div class="tscroll"><table>
+<tr><th>Protocole</th><th>Fils</th><th>Usage typique</th><th>Point fort</th></tr>
+<tr><td><b>UART</b> (Serial)</td><td>2 (TX/RX)</td><td>Moniteur série, GPS, Bluetooth</td><td>Simplicité</td></tr>
+<tr><td><b>I2C</b> (Wire)</td><td>2 (SDA/SCL)</td><td>Capteurs, écrans, RTC</td><td>Plusieurs modules sur 2 fils</td></tr>
+<tr><td><b>SPI</b></td><td>4</td><td>Cartes SD, écrans rapides</td><td>Vitesse</td></tr>
+<tr><td><b>Bus CAN</b></td><td>2 (CAN-H/CAN-L)</td><td>Véhicules, engins miniers</td><td>Robuste aux parasites, priorités</td></tr>
+</table></div>
+<p>Règle d'or de l'UART : <strong>même vitesse des deux côtés</strong> (le baudrate — 9600 dans nos TP). Des caractères illisibles au moniteur = baudrates différents. C'est le premier réflexe de dépannage.</p>
+
+<h3>Le bus CAN : le roi de l'industriel</h3>
+<p>Attention au sigle : ici, <strong>CAN</strong> = <em>Controller Area Network</em>, le réseau — rien à voir avec le convertisseur du module 12. Ce bus utilise une <em>paire différentielle</em> (CAN-H / CAN-L) : le récepteur lit la <em>différence</em> entre les deux fils, donc un parasite qui touche les deux fils en même temps s'annule. Chaque trame porte un identifiant qui fixe sa <strong>priorité</strong> : les messages critiques passent toujours devant. Le bus est terminé par deux résistances de 120 Ω.</p>
+
+<div class="terrain">
+  <span class="tag">⛏ Sur le terrain</span>
+  Le bus CAN d'une DP1500i relie des dizaines de microcontrôleurs sur une simple paire torsadée. Tout ce que tu as appris — broches, ADC, PWM, interruptions — tourne dans chacun de ces modules. Comprendre le µC, c'est comprendre la machine. (Et le coup des 120 Ω : deux résistances de terminaison en parallèle → tu dois mesurer ≈ 60 Ω entre CAN-H et CAN-L bus hors tension. Mesure de base du diagnostic CAN.)
+</div>
+
+<div class="quiz">
+<h4>Quiz express</h4>
+<div class="q">1. Le moniteur série affiche des caractères illisibles. Cause probable :</div>
+<div class="opts">
+  <button data-ok="1">Le baudrate du moniteur ne correspond pas au Serial.begin() du programme</button>
+  <button data-ok="0">Le câble USB est trop court</button>
+  <button data-ok="0">Il manque une résistance de 120 Ω</button>
+</div>
+<div class="exp">L'UART n'a pas d'horloge partagée : même vitesse obligatoire des deux côtés. (Le 120 Ω, c'est pour le bus CAN !)</div>
+<div class="q">2. Pourquoi le bus CAN résiste-t-il si bien aux parasites d'un engin minier ?</div>
+<div class="opts">
+  <button data-ok="0">Ses fils sont blindés au plomb</button>
+  <button data-ok="1">La lecture différentielle annule les perturbations communes aux deux fils</button>
+  <button data-ok="0">Il transmet très lentement</button>
+</div>
+<div class="exp">Un parasite induit la même tension sur CAN-H et CAN-L ; la différence, elle, ne bouge pas.</div>
+</div>
+</section>
+
+<!-- ============ MODULE 14 ============ -->
+<section class="module" data-title="14. Projet final">
+<div class="mod-head">
+  <div class="num">MODULE 14 / 14</div>
+  <h2>Projet final : la mini station de surveillance</h2>
+</div>
+<div class="objectifs"><b>Objectifs :</b>
+  <ul>
+    <li>Assembler tout le cours dans un vrai petit système</li>
+    <li>Découvrir la machine à états : le patron de tout l'embarqué industriel</li>
+  </ul>
+</div>
+
+<p class="lead">Un système complet, avec le matériel des TP : une <strong>LDR</strong> (le capteur), une <strong>LED verte</strong> et une <strong>LED rouge + buzzer</strong> (les actionneurs), un <strong>bouton</strong> d'acquittement. Mission : surveiller la lumière et donner l'alarme si elle passe sous un seuil — comme un capteur de flamme, de niveau ou de présence sur une machine.</p>
+
+<h3>L'outil des pros : la machine à états</h3>
+<p>Plutôt qu'un empilement de if, on décrit le système comme une <strong>machine à états</strong> : une liste d'<em>états</em> possibles et des <em>transitions</em> déclenchées par des événements. Notre station en a trois :</p>
+<div class="tscroll"><table>
+<tr><th>État</th><th>Comportement</th><th>Transition</th></tr>
+<tr><td><b>SURVEILLANCE</b></td><td>LED verte allumée, on mesure</td><td>Lumière sous le seuil → ALARME</td></tr>
+<tr><td><b>ALARME</b></td><td>LED rouge clignote (millis() !), buzzer</td><td>Appui bouton → ACQUITTÉ</td></tr>
+<tr><td><b>ACQUITTÉ</b></td><td>Silence, rouge fixe</td><td>Lumière revenue au-dessus du seuil → SURVEILLANCE</td></tr>
+</table></div>
+
+<pre><span class="k">enum</span> { SURVEILLANCE, ALARME, ACQUITTE } etat = SURVEILLANCE;
+
+<span class="k">void</span> loop() {
+  <span class="k">int</span> lumiere = analogRead(<span class="k">A0</span>);
+  <span class="k">switch</span> (etat) {
+    <span class="k">case</span> SURVEILLANCE:
+      <span class="k">if</span> (lumiere &lt; <span class="n">300</span>) etat = ALARME;
+      <span class="k">break</span>;
+    <span class="k">case</span> ALARME:
+      <span class="c">// rouge clignote + buzzer (avec millis, pas delay !)</span>
+      <span class="k">if</span> (digitalRead(<span class="n">2</span>) == <span class="k">LOW</span>) etat = ACQUITTE;
+      <span class="k">break</span>;
+    <span class="k">case</span> ACQUITTE:
+      <span class="k">if</span> (lumiere &gt; <span class="n">400</span>) etat = SURVEILLANCE;
+      <span class="k">break</span>;
+  }
+}</pre>
+<p>Remarque le double seuil (300 / 400) : cet écart, c'est l'<strong>hystérésis</strong> — il évite que le système batte entre deux états quand la mesure hésite autour du seuil. Exactement comme un pressostat.</p>
+
+<div class="terrain">
+  <span class="tag">⛏ Sur le terrain</span>
+  Une séquence de forage est une machine à états : ARRÊT → PRÉ-LUBRIFICATION → ROTATION → PERCUSSION. Une machine « bloquée » dans une phase, c'est une condition de transition jamais satisfaite — souvent un capteur HS. Réflexe : identifier la condition attendue par l'état bloqué, puis tester le capteur correspondant. Ce patron variable d'état + switch, tu viens de l'écrire toi-même : c'est le même qui tourne dans les modules de la foreuse.
+</div>
+
+<div class="tp">
+  <span class="tag">🔧 TP 7 — Construis la station</span>
+  <p>Assemble et programme la station complète. Étapes conseillées : 1) la mesure seule avec affichage série (module 12) ; 2) l'état SURVEILLANCE/ALARME sans le bouton ; 3) l'acquittement ; 4) le clignotement non bloquant. Quand ça marche : ajoute un compteur d'alarmes affiché au moniteur, puis mémorise-le en EEPROM pour qu'il survive aux coupures. Tu utilises alors <em>chaque module de ce cours</em>.</p>
+</div>
+
+<div class="cle">
+  <span class="tag">✔ Et après ?</span>
+  Tu as les fondations : le reste (écrans, moteurs, capteurs I2C, modules radio…) s'apprend de la même façon — un montage simple, un exemple, le moniteur série, et de l'expérimentation. La progression logique : servomoteurs et écrans LCD, puis capteurs numériques (DHT11), puis un projet utile chez toi ou à l'atelier. Chaque nouveau composant réutilise les mêmes fondations.
+</div>
+
+<div class="quiz">
+<h4>Quiz express</h4>
+<div class="q">1. À quoi sert l'hystérésis (double seuil) ?</div>
+<div class="opts">
+  <button data-ok="1">À éviter que le système oscille quand la mesure hésite autour du seuil</button>
+  <button data-ok="0">À rendre le capteur plus précis</button>
+  <button data-ok="0">À économiser la batterie</button>
+</div>
+<div class="exp">Un seul seuil = battements incessants autour de la limite. Deux seuils écartés = comportement stable. Comme un pressostat.</div>
+<div class="q">2. Dans une machine à états, une machine « bloquée » dans une phase signifie généralement…</div>
+<div class="opts">
+  <button data-ok="1">Une condition de transition jamais satisfaite (ex. capteur HS)</button>
+  <button data-ok="0">Un µC grillé</button>
+  <button data-ok="0">Un problème d'alimentation</button>
+</div>
+<div class="exp">Réflexe diagnostic : identifier la condition attendue par l'état bloqué, puis vérifier le capteur ou signal correspondant.</div>
+</div>
+</section>
+
+</main>
+
+<footer>
+  Cours « Comprendre les microcontrôleurs — de zéro à la pratique » · Synthèse pédagogique originale
+  (playlist vidéo, support d&rsquo;architecture et références Arduino) · Formation des techniciens débutants.
+</footer>
+
+<script>
+/* ===== Navigation modules ===== */
+const sections=[...document.querySelectorAll('section.module')];
+const nav=document.getElementById('navmods');
+const MEMKEY='mcu-cours-v3';   // sauvegarde de progression (version-stampée)
+const store={
+  get(k){try{return localStorage.getItem(k);}catch(e){return null;}},
+  set(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+};
+let visited=new Set();
+try{const s=JSON.parse(store.get(MEMKEY+':visites')||'[]');visited=new Set(s);}catch(e){}
+sections.forEach((s,i)=>{
+  const b=document.createElement('button');
+  b.textContent=s.dataset.title;
+  b.addEventListener('click',()=>go(i));
+  nav.appendChild(b);
+});
+const navBtns=[...nav.children];
+function go(i){
+  if(i<0||i>=sections.length)return;
+  sections.forEach((s,k)=>s.classList.toggle('active',k===i));
+  navBtns.forEach((b,k)=>{
+    b.classList.toggle('active',k===i);
+    b.classList.toggle('done',visited.has(k)&&k!==i);
+  });
+  visited.add(i);
+  store.set(MEMKEY+':visites',JSON.stringify([...visited]));
+  store.set(MEMKEY+':courant',String(i));
+  navBtns[i].scrollIntoView({block:'nearest',inline:'center',behavior:'smooth'});
+  window.scrollTo({top:0,behavior:'smooth'});
+  current=i;
+  updatePagenav();
+}
+let current=0;
+
+/* Boutons précédent/suivant dans chaque module */
+sections.forEach((s,i)=>{
+  const d=document.createElement('div');
+  d.className='pagenav';
+  const prev=document.createElement('button');
+  prev.textContent='← Précédent';
+  prev.disabled=(i===0);
+  prev.addEventListener('click',()=>go(i-1));
+  const next=document.createElement('button');
+  next.className='next';
+  next.textContent=(i===sections.length-1)?'Terminé 🎉':'Suivant →';
+  next.disabled=(i===sections.length-1);
+  next.addEventListener('click',()=>go(i+1));
+  d.append(prev,next);
+  s.appendChild(d);
+});
+function updatePagenav(){}
+
+/* ===== Quiz ===== */
+document.querySelectorAll('.quiz .opts').forEach(opts=>{
+  const exp=opts.nextElementSibling;
+  opts.querySelectorAll('button').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const ok=btn.dataset.ok==='1';
+      btn.classList.add(ok?'good':'bad');
+      if(ok){
+        opts.querySelectorAll('button').forEach(b=>b.disabled=true);
+        if(exp&&exp.classList.contains('exp'))exp.classList.add('show');
+      }else{
+        setTimeout(()=>btn.classList.remove('bad'),900);
+      }
+    });
+  });
+});
+
+/* ===== Registre binaire interactif (module 2) ===== */
+const bitsBox=document.getElementById('bits');
+if(bitsBox){
+  let reg=0;
+  const cells=[];
+  for(let i=7;i>=0;i--){
+    const c=document.createElement('button');
+    c.className='bit';
+    c.innerHTML='0<small>'+(2**i)+'</small>';
+    c.setAttribute('aria-label','bit '+i);
+    c.addEventListener('click',()=>{reg^=(1<<i);render();});
+    bitsBox.appendChild(c);
+    cells.push({el:c,i});
+  }
+  function render(){
+    cells.forEach(({el,i})=>{
+      const on=(reg>>i)&1;
+      el.classList.toggle('on',!!on);
+      el.innerHTML=(on?'1':'0')+'<small>'+(2**i)+'</small>';
+    });
+    document.getElementById('vdec').textContent=reg;
+    document.getElementById('vhex').textContent='0x'+reg.toString(16).toUpperCase().padStart(2,'0');
+    document.getElementById('vbin').textContent='0b'+reg.toString(2).padStart(8,'0');
+  }
+  render();
+}
+
+/* ===== Démo PWM (module 10) ===== */
+const slider=document.getElementById('pwmslider');
+if(slider){
+  const led=document.getElementById('pwmled');
+  const val=document.getElementById('pwmval');
+  const volt=document.getElementById('pwmv');
+  const wave=document.getElementById('pwmwave');
+  function pwm(){
+    const d=+slider.value;
+    led.style.opacity=Math.max(.06,d/100);
+    led.style.boxShadow='0 0 '+(d*0.4)+'px rgba(255,184,77,'+(d/130)+')';
+    val.textContent=d+' %';
+    volt.textContent=(5*d/100).toFixed(2).replace('.',',')+' V';
+    // Tracer 4 périodes
+    const x0=20,W=560,periods=4,pw=W/periods;
+    let p='M '+x0+' 75 ';
+    for(let k=0;k<periods;k++){
+      const s=x0+k*pw, hi=s+pw*d/100;
+      if(d>0){p+='L '+s+' 75 L '+s+' 20 L '+hi+' 20 L '+hi+' 75 ';}
+    }
+    p+='L '+(x0+W)+' 75';
+    wave.setAttribute('d',p);
+  }
+  slider.addEventListener('input',pwm);
+  pwm();
+}
+
+/* Démarrage : reprendre la progression sauvegardée */
+let depart=parseInt(store.get(MEMKEY+':courant')||'0',10);
+if(isNaN(depart)||depart<0||depart>=sections.length)depart=0;
+go(depart);
+</script>
+</body>
+</html>
